@@ -36,6 +36,8 @@ class PepperScrapper:
             "price_after_discount",
             "hottness",
             "comments",
+            "username",
+            "link",
         ]
 
     def derive_html_content_from_driver_to_soup(self) -> None:
@@ -66,7 +68,7 @@ class PepperScrapper:
 
     def extract_content_from_article(self, article: Tag) -> list:
         content_div = article.find("div", {"class": "threadGrid thread-clickRoot"})
-        # if content_div is none, then the bargain will open up tomorrow, so we select it by different tag
+        # if content_div is None, then the bargain will open up tomorrow, so we select it by different tag
         if content_div is None:
             content_div = article.find(
                 "div", {"class": "thread-fullMode threadGrid thread-clickRoot"}
@@ -74,8 +76,17 @@ class PepperScrapper:
         hottness = self.extract_hottness(content_div)
         price_before_discount, price_after_discount = self.extract_prices(content_div)
         comments = self.extract_comments(content_div)
-        title = self.extract_title(content_div)
-        return [title, price_before_discount, price_after_discount, hottness, comments]
+        title, link = self.extract_title(content_div)
+        username = self.extract_username(content_div)
+        return [
+            title,
+            price_before_discount,
+            price_after_discount,
+            hottness,
+            comments,
+            username,
+            link,
+        ]
 
     @staticmethod
     def extract_hottness(bargain_div: Tag) -> int:
@@ -104,6 +115,14 @@ class PepperScrapper:
             else -1
         )
         return int(hottness)
+
+    @staticmethod
+    def extract_username(bargain_div: Tag) -> str:
+        return (
+            bargain_div.find("span", {"class": "thread-username"})
+            .get_text()
+            .strip("\n\t")
+        )
 
     @staticmethod
     def extract_prices(bargain_div: Tag) -> tuple:
@@ -143,12 +162,12 @@ class PepperScrapper:
         if comments != "":
             return int(comments)
         else:
-            print(bargain_div)
             return -1
 
     @staticmethod
     def extract_title(bargain_div: Tag) -> str:
-        return bargain_div.find("strong", {"class": "thread-title"}).find("a")["title"]
+        title_anchor = bargain_div.find("strong", {"class": "thread-title"}).find("a")
+        return title_anchor["title"], title_anchor["href"]
 
     def scan_next_pages(self, pages_to_scan: int = 5):
         for page in range(pages_to_scan):
@@ -167,4 +186,4 @@ if __name__ == "__main__":
     driver.get("https://www.pepper.pl")
     scrapper = PepperScrapper(driver=driver)
     scrapper.scan_and_add_current_page_for_content()
-    scrapper.scan_next_pages()
+    # scrapper.scan_next_pages()
