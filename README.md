@@ -19,4 +19,4 @@ To - do:
 - [x] scan multiple pages
 - [ ] categorize the bargains
 - [ ] create notebook with stats of scrapped pages
-- [ ] issue with <!-- buffered --> - pages are not scrapped if this comment is present
+- [ ] issue with \<!-- buffered --> - pages are not scrapped if this comment is present
