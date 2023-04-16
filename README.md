@@ -6,10 +6,17 @@ To - do:
   - [x] extract hottness
   - [x] extract comments
   - [x] extract title
-  - [x] extract price before and after discount
-  - [ ] extract username
-  - [ ] extract link
+  - [ ] extract price before and after discount
+    - [x] extract price values
+    - [ ] parse prices to one format
+      - [ ] 'ZA DARMO'
+      - [ ] prices with '.' as separator (thousands or decimal)
+      - [ ] prices with ',' as separator
+      - [ ] x % instead of price
+      - [ ] 'Allegro Okaze' or similar instead of price value
+  - [x] extract username
+  - [x] extract link
 - [x] scan multiple pages
 - [ ] categorize the bargains
 - [ ] create notebook with stats of scrapped pages
-- [ ] ?? 
+- [ ] issue with <!-- buffered --> - pages are not scrapped if this comment is present
