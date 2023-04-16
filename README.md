@@ -16,6 +16,8 @@ To - do:
       - [ ] 'Allegro Okaze' or similar instead of price value
   - [x] extract username
   - [x] extract link
+  - [ ] extract company name (e.g. Allegro okaze, selgros okazje and so on)
+- [ ] extract category of bargain (after entering bargain link, on the top part of page there is grey bar with categories) - maybe extract them all in form of category main: something, subcategory: something_2 (if subcategory doesnt exist -> None)
 - [x] scan multiple pages
 - [ ] categorize the bargains
 - [ ] create notebook with stats of scrapped pages
