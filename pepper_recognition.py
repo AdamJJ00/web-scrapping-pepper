@@ -18,7 +18,7 @@ class PepperLinksScrapper:
         self.current_page = 1
         self.current_soup = None
         self.click_on_continue_without_cookies()
-        #self.login_to_pepper()
+        self.login_to_pepper()
         self.scrapped_data = pd.DataFrame(
             {col: [] for col in self.get_columns_for_content_df()}
         )
@@ -130,7 +130,7 @@ class PepperScrapper:
     def scrape_additional_data(self):
         additional_info = []
         for link in self.data["link"]:
-            time.sleep(0.5)
+            time.sleep(0.2)
             self.web_driver.get(link)
             info = self.scrape_single_link()
             additional_info.append(info)
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     driver.get("https://www.pepper.pl")
     scrapper = PepperLinksScrapper(driver=driver)
     scrapper.scan_current_page_for_content()
-    scrapper.scan_next_pages(0)
+    scrapper.scan_next_pages(5)
     scrapper.scrapped_data.reset_index(drop=True, inplace=True)
     scrapper.scrapped_data.to_csv("pepper_links.csv")
     links_file = "pepper_links.csv"
@@ -245,4 +245,5 @@ if __name__ == "__main__":
     pepper_scrapper = PepperScrapper(links_file, driver)
     pepper_scrapper.scrape_additional_data()
     pepper_scrapper.save_data(output_file)
-
+    time.sleep(2)
+    driver.quit()
