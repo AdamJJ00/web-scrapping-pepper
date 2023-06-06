@@ -121,34 +121,94 @@ class PepperScrapper:
         for link in self.data['link']:
             time.sleep(0.5)
             self.web_driver.get(link)
-            info = self.scrape_single_link(link)
+            info = self.scrape_single_link()
             additional_info.append(info)
         additional_data = pd.DataFrame(additional_info)
         self.data = pd.concat([self.data, additional_data], axis=1)
 
-    def scrape_single_link(self, link):
-        response = requests.get(link)
-        soup = BS(response.text, "html.parser")
+    def scrape_single_link(self):
+        response = self.web_driver.page_source
+        soup = BS(response, "html.parser")
 
         try:
             title = soup.find("span", {"class": "text--b size--all-xl size--fromW3-xxl"}).get_text()
         except AttributeError:
-            title = "title not available"
+            title = "title_not_available"
 
-        category = 0
-        description = 0
-        hottnes = 0
-        number_of_comments = 0
-        price_after_discount = 0
-        price_before_discount = 0
-        percentage_change_in_price = 0
-        place_of_bargain_price = 0
+        try:
+            list_category = soup.find("ul", {"class": "flex flex--fromW2-wrap size--all-s text--lh-1"}).find_all('li')
+            category = [element.get_text().strip(" \n\t") for element in list_category]
+        except AttributeError:
+            category = ['category_not_available']
+
+        try:
+            hottness_tag = soup.find(
+                "div",
+                {
+                    "class": "vote-box overflow--hidden border border--color-borderGrey bRad--a space--h-1 bRad--circle flex"
+                },
+            )
+            if hottness_tag:
+                hottness_extracted = hottness_tag.get_text()
+            else:
+                hottness_tag = soup.find(
+                    "div",
+                    {
+                        "class": "vote-box overflow--hidden border border--color-borderGrey bRad--a space--h-1 bRad--circle flex vote-box--muted"
+                    },
+                )
+                hottness_extracted = hottness_tag.get_text()
+            try:
+                hottness = re.search(r"\d+", hottness_extracted).group()
+            except AttributeError:
+                hottness = -1
+        except AttributeError:
+            hottness = -1
+
+        try:
+            number_of_comments =  soup.find("a", {"title": "Comments"}).get_text().strip(" \n\t")
+        except AttributeError:
+            number_of_comments = -1
+
+
+        try:
+            prices = soup.find("span", {"class": "overflow--wrap-off flex boxAlign-ai--all-bl"})
+            try:
+                price_after_discount = prices.find(
+                    "span",
+                    {"class": "threadItemCard-price text--b thread-price"},
+                ).get_text()
+            except AttributeError:
+                price_after_discount = -1
+
+            try:
+                prices_and_percentage = prices.find("span", {"class": "flex--inline boxAlign-ai--all-c"})
+                price_before_discount = prices_and_percentage.find(
+                    "span",
+                    {"class": "size--all-xl size--fromW3-xxl mute--text text--lineThrough"}).get_text()
+            except AttributeError:
+                price_before_discount = -1
+
+            try:
+                prices_and_percentage = prices.find("span", {"class": "flex--inline boxAlign-ai--all-c"})
+                percentage_change_in_price = prices_and_percentage.find("span", {"class": "space--ml-2"}).get_text()
+            except AttributeError:
+                percentage_change_in_price = -1
+
+        except AttributeError:
+            price_before_discount = -1
+            price_after_discount = -1
+            percentage_change_in_price = -1
+
+        try:
+            place_of_bargain_price = soup.find("button", {"class": "text--color-greyShade overflow--wrap-off"}).span.span.get_text()
+        except AttributeError:
+            place_of_bargain_price = "place_of_bargain_price_not_available"
 
         info = {
             'title': title,
             'category': category,
-            'description': description,
-            'hottnes': hottnes,
+            'hottness': hottness,
             'number_of_comments': number_of_comments,
             'price_after_discount': price_after_discount,
             'price_before_discount': price_before_discount,
@@ -175,4 +235,3 @@ if __name__ == "__main__":
     pepper_scrapper.scrape_additional_data()
     pepper_scrapper.save_data(output_file)
 
-    driver.quit()
