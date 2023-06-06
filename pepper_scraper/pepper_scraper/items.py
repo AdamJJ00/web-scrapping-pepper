@@ -6,7 +6,18 @@
 import scrapy
 
 
+class PepperScraperUrl(scrapy.Item):
+    link = scrapy.Field()
+
+
 class PepperScraperItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    title = scrapy.Field()
+    price_before_discount = scrapy.Field()
+    price_after_discount = scrapy.Field()
+    hotness = scrapy.Field()
+    comments = scrapy.Field()
+    username = scrapy.Field()
+    category = scrapy.Field()
+    link = scrapy.Field()
+    percentage_change_in_price = scrapy.Field()
+    place_of_bargain_price = scrapy.Field()
