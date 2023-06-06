@@ -17,7 +17,7 @@ class PepperLinksScrapper:
         self.current_page = 1
         self.current_soup = None
         self.click_on_continue_without_cookies()
-        self.login_to_pepper()
+        #self.login_to_pepper()
         self.scrapped_data = pd.DataFrame(
             {col: [] for col in self.get_columns_for_content_df()}
         )
@@ -131,9 +131,10 @@ class PepperScrapper:
         soup = BS(response.text, "html.parser")
 
         try:
-            title = soup.find("span", class_="text--b size--all-xl size--fromW3-xxl").get_text()
+            title = soup.find("span", {"class": "text--b size--all-xl size--fromW3-xxl"}).get_text()
         except AttributeError:
             title = "title not available"
+
         category = 0
         description = 0
         hottnes = 0
@@ -165,7 +166,7 @@ if __name__ == "__main__":
     driver.get("https://www.pepper.pl")
     scrapper = PepperLinksScrapper(driver=driver)
     scrapper.scan_current_page_for_content()
-    scrapper.scan_next_pages(5)
+    scrapper.scan_next_pages(0)
     scrapper.scrapped_data.reset_index(drop=True, inplace=True)
     scrapper.scrapped_data.to_csv('pepper_links.csv')
     links_file = 'pepper_links.csv'
