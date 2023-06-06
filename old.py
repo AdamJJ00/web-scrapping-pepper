@@ -2,7 +2,6 @@ import re
 import getpass
 import pandas as pd
 import time
-import requests
 from bs4 import BeautifulSoup as BS
 from bs4.element import Tag
 from selenium import webdriver
@@ -11,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-class PepperLinksScrapper:
+class PepperScrapper:
     def __init__(self, driver: webdriver):
         self.web_driver = driver
         self.current_page = 1
@@ -34,7 +33,13 @@ class PepperLinksScrapper:
     @staticmethod
     def get_columns_for_content_df() -> list:
         return [
-            "link"
+            "title",
+            "price_before_discount",
+            "price_after_discount",
+            "hottness",
+            "comments",
+            "username",
+            "link",
         ]
 
     def derive_html_content_from_driver_to_soup(self) -> None:
@@ -63,13 +68,90 @@ class PepperLinksScrapper:
             )
         if content_div is None:
             content_div = article.find("div", {"class": ""})
-        link = self.extract_title(content_div)
-        return [link]
+        title, link = self.extract_title(content_div)
+        hottness = self.extract_hottness(content_div)
+        price_before_discount, price_after_discount = self.extract_prices(content_div)
+        comments = self.extract_comments(content_div)
+        username = self.extract_username(content_div)
+        return [
+            title,
+            price_before_discount,
+            price_after_discount,
+            hottness,
+            comments,
+            username,
+            link,
+        ]
+
+    @staticmethod
+    def extract_hottness(bargain_div: Tag) -> int:
+        hottness_tag = bargain_div.find(
+            "div",
+            {
+                "class": "cept-vote-box vote-box overflow--hidden border border--color-borderGrey bRad--a thread-noClick"
+            },
+        )
+        if hottness_tag:
+            hottness_extracted = hottness_tag.get_text()
+        else:
+            hottness_tag = bargain_div.find(
+                "div",
+                {
+                    "class": "vote-box vote-box--muted space--h-2 border border--color-borderGrey bRad--a text--color-grey space--mr-3"
+                },
+            )
+            hottness_extracted = hottness_tag.get_text()
+        try:
+            hottness = re.search(r"\d+", hottness_extracted).group()
+        except AttributeError:
+            hottness = -1
+        return hottness
+
+    @staticmethod
+    def extract_username(bargain_div: Tag) -> str:
+        return (
+            bargain_div.find("span", {"class": "thread-username"})
+            .get_text()
+            .strip("\n\t")
+        )
+
+    @staticmethod
+    def extract_prices(bargain_div: Tag) -> tuple:
+        prices = bargain_div.find("span", {"class": "overflow--fade"})
+        try:
+            price_after_discount = prices.find(
+                "span",
+                {"class": "overflow--wrap-off"},
+            ).get_text()
+        except AttributeError:
+            price_after_discount = "price not available"
+        price_before_discount_tag = prices.find(
+            "span",
+            {"class": "flex--inline boxAlign-ai--all-c space--ml-2"},
+        )
+        try:
+            price_before_discount = price_before_discount_tag.find("span").get_text()
+        except AttributeError:
+            price_before_discount = "price not available"
+        return price_before_discount, price_after_discount
+
+    @staticmethod
+    def extract_comments(bargain_div: Tag) -> int:
+        comments = bargain_div.find(
+            "a",
+            {
+                "class": "button button--type-secondary button--mode-default button--shape-circle"
+            },
+        ).get_text()
+        if comments != "":
+            return int(comments)
+        else:
+            return -1
 
     @staticmethod
     def extract_title(bargain_div: Tag) -> str:
         title_anchor = bargain_div.find("strong", {"class": "thread-title"}).find("a")
-        return title_anchor["href"]
+        return title_anchor["title"], title_anchor["href"]
 
     def scan_next_pages(self, pages_to_scan: int = 5):
         for page in range(pages_to_scan):
@@ -110,68 +192,11 @@ class PepperLinksScrapper:
         time.sleep(3)
 
 
-class PepperScrapper:
-    def __init__(self, links_file, driver: webdriver):
-        self.web_driver = driver
-        self.links_file = links_file
-        self.data = pd.read_csv(links_file)
-
-    def scrape_additional_data(self):
-        additional_info = []
-        for link in self.data['link']:
-            time.sleep(0.5)
-            self.web_driver.get(link)
-            info = self.scrape_single_link(link)
-            additional_info.append(info)
-        additional_data = pd.DataFrame(additional_info)
-        self.data = pd.concat([self.data, additional_data], axis=1)
-
-    def scrape_single_link(self, link):
-        response = requests.get(link)
-        soup = BS(response.text, "html.parser")
-
-        try:
-            title = soup.find("span", class_="text--b size--all-xl size--fromW3-xxl").get_text()
-        except AttributeError:
-            title = "title not available"
-        category = 0
-        description = 0
-        hottnes = 0
-        number_of_comments = 0
-        price_after_discount = 0
-        price_before_discount = 0
-        percentage_change_in_price = 0
-        place_of_bargain_price = 0
-
-        info = {
-            'title': title,
-            'category': category,
-            'description': description,
-            'hottnes': hottnes,
-            'number_of_comments': number_of_comments,
-            'price_after_discount': price_after_discount,
-            'price_before_discount': price_before_discount,
-            'percentage_change_in_price': percentage_change_in_price,
-            'place_of_bargain_price': place_of_bargain_price
-        }
-        return info
-
-    def save_data(self, output_file):
-        self.data.to_csv(output_file, index=False)
-
 
 if __name__ == "__main__":
     driver = webdriver.Chrome()
     driver.get("https://www.pepper.pl")
-    scrapper = PepperLinksScrapper(driver=driver)
+    scrapper = PepperScrapper(driver=driver)
     scrapper.scan_current_page_for_content()
     scrapper.scan_next_pages(5)
-    scrapper.scrapped_data.reset_index(drop=True, inplace=True)
-    scrapper.scrapped_data.to_csv('pepper_links.csv')
-    links_file = 'pepper_links.csv'
-    output_file = 'pepper_data.csv'
-    pepper_scrapper = PepperScrapper(links_file, driver)
-    pepper_scrapper.scrape_additional_data()
-    pepper_scrapper.save_data(output_file)
-
-    driver.quit()
+    scrapper.scrapped_data.to_csv('pepper_data.csv')
