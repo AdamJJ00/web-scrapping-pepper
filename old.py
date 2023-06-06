@@ -1,7 +1,8 @@
-import re
 import getpass
-import pandas as pd
+import re
 import time
+
+import pandas as pd
 from bs4 import BeautifulSoup as BS
 from bs4.element import Tag
 from selenium import webdriver
@@ -61,7 +62,9 @@ class PepperScrapper:
         )
 
     def extract_content_from_article(self, article: Tag) -> list:
-        content_div = article.find("div", {"class": "threadGrid thread-clickRoot"})
+        content_div = article.find(
+            "div", {"class": "threadGrid thread-clickRoot"}
+        )
         if content_div is None:
             content_div = article.find(
                 "div", {"class": "thread-fullMode threadGrid thread-clickRoot"}
@@ -70,7 +73,9 @@ class PepperScrapper:
             content_div = article.find("div", {"class": ""})
         title, link = self.extract_title(content_div)
         hottness = self.extract_hottness(content_div)
-        price_before_discount, price_after_discount = self.extract_prices(content_div)
+        price_before_discount, price_after_discount = self.extract_prices(
+            content_div
+        )
         comments = self.extract_comments(content_div)
         username = self.extract_username(content_div)
         return [
@@ -130,7 +135,9 @@ class PepperScrapper:
             {"class": "flex--inline boxAlign-ai--all-c space--ml-2"},
         )
         try:
-            price_before_discount = price_before_discount_tag.find("span").get_text()
+            price_before_discount = price_before_discount_tag.find(
+                "span"
+            ).get_text()
         except AttributeError:
             price_before_discount = "price not available"
         return price_before_discount, price_after_discount
@@ -150,7 +157,9 @@ class PepperScrapper:
 
     @staticmethod
     def extract_title(bargain_div: Tag) -> str:
-        title_anchor = bargain_div.find("strong", {"class": "thread-title"}).find("a")
+        title_anchor = bargain_div.find(
+            "strong", {"class": "thread-title"}
+        ).find("a")
         return title_anchor["title"], title_anchor["href"]
 
     def scan_next_pages(self, pages_to_scan: int = 5):
@@ -165,32 +174,39 @@ class PepperScrapper:
         return f"https://www.pepper.pl/?page={page_num}"
 
     def login_to_pepper(self):
-
         time.sleep(3)
 
-        login_button = self.web_driver.find_element(By.XPATH, '//*[@id="main"]/div[3]/header/div/div/div[3]/button[2]')
+        login_button = self.web_driver.find_element(
+            By.XPATH, '//*[@id="main"]/div[3]/header/div/div/div[3]/button[2]'
+        )
         login_button.click()
 
         time.sleep(3)
 
-        username = self.web_driver.find_element(By.XPATH, '//*[@id="loginModalForm-identity"]')
+        username = self.web_driver.find_element(
+            By.XPATH, '//*[@id="loginModalForm-identity"]'
+        )
 
         email = input("Please provide your e-mail: ")
         username.send_keys(email)
 
         time.sleep(3)
 
-        my_password = self.web_driver.find_element(By.XPATH, '//*[@id="loginModalForm-password"]')
-        password = getpass.getpass('Please provide your password: ')
+        my_password = self.web_driver.find_element(
+            By.XPATH, '//*[@id="loginModalForm-password"]'
+        )
+        password = getpass.getpass("Please provide your password: ")
         my_password.send_keys(password)
 
         time.sleep(3)
 
-        button = self.web_driver.find_element(By.XPATH, "/html/body/section/div[1]/div/div/div/div[3]/div[2]/ul/li/div/button")
+        button = self.web_driver.find_element(
+            By.XPATH,
+            "/html/body/section/div[1]/div/div/div/div[3]/div[2]/ul/li/div/button",
+        )
         button.click()
 
         time.sleep(3)
-
 
 
 if __name__ == "__main__":
@@ -199,4 +215,4 @@ if __name__ == "__main__":
     scrapper = PepperScrapper(driver=driver)
     scrapper.scan_current_page_for_content()
     scrapper.scan_next_pages(5)
-    scrapper.scrapped_data.to_csv('pepper_data.csv')
+    scrapper.scrapped_data.to_csv("pepper_data.csv")

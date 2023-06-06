@@ -1,6 +1,9 @@
-from scrapy.crawler import CrawlerProcess
-from pepper_scraper.pepper_scraper.spiders.pepper_spider import PepperSpider
 import pandas as pd
+from scrapy.crawler import CrawlerProcess
+
+from pepper_scraper.pepper_scraper.spiders.pepper_url_spider import (
+    PepperSpider,
+)
 
 
 def run_scraper():

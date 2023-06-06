@@ -1,7 +1,8 @@
-import re
 import getpass
-import pandas as pd
+import re
 import time
+
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup as BS
 from bs4.element import Tag
@@ -33,9 +34,7 @@ class PepperLinksScrapper:
 
     @staticmethod
     def get_columns_for_content_df() -> list:
-        return [
-            "link"
-        ]
+        return ["link"]
 
     def derive_html_content_from_driver_to_soup(self) -> None:
         html_content = self.web_driver.page_source
@@ -56,7 +55,9 @@ class PepperLinksScrapper:
         )
 
     def extract_content_from_article(self, article: Tag) -> list:
-        content_div = article.find("div", {"class": "threadGrid thread-clickRoot"})
+        content_div = article.find(
+            "div", {"class": "threadGrid thread-clickRoot"}
+        )
         if content_div is None:
             content_div = article.find(
                 "div", {"class": "thread-fullMode threadGrid thread-clickRoot"}
@@ -68,7 +69,9 @@ class PepperLinksScrapper:
 
     @staticmethod
     def extract_title(bargain_div: Tag) -> str:
-        title_anchor = bargain_div.find("strong", {"class": "thread-title"}).find("a")
+        title_anchor = bargain_div.find(
+            "strong", {"class": "thread-title"}
+        ).find("a")
         return title_anchor["href"]
 
     def scan_next_pages(self, pages_to_scan: int = 5):
@@ -83,28 +86,36 @@ class PepperLinksScrapper:
         return f"https://www.pepper.pl/?page={page_num}"
 
     def login_to_pepper(self):
-
         time.sleep(3)
 
-        login_button = self.web_driver.find_element(By.XPATH, '//*[@id="main"]/div[3]/header/div/div/div[3]/button[2]')
+        login_button = self.web_driver.find_element(
+            By.XPATH, '//*[@id="main"]/div[3]/header/div/div/div[3]/button[2]'
+        )
         login_button.click()
 
         time.sleep(3)
 
-        username = self.web_driver.find_element(By.XPATH, '//*[@id="loginModalForm-identity"]')
+        username = self.web_driver.find_element(
+            By.XPATH, '//*[@id="loginModalForm-identity"]'
+        )
 
         email = input("Please provide your e-mail: ")
         username.send_keys(email)
 
         time.sleep(3)
 
-        my_password = self.web_driver.find_element(By.XPATH, '//*[@id="loginModalForm-password"]')
-        password = getpass.getpass('Please provide your password: ')
+        my_password = self.web_driver.find_element(
+            By.XPATH, '//*[@id="loginModalForm-password"]'
+        )
+        password = getpass.getpass("Please provide your password: ")
         my_password.send_keys(password)
 
         time.sleep(3)
 
-        button = self.web_driver.find_element(By.XPATH, "/html/body/section/div[1]/div/div/div/div[3]/div[2]/ul/li/div/button")
+        button = self.web_driver.find_element(
+            By.XPATH,
+            "/html/body/section/div[1]/div/div/div/div[3]/div[2]/ul/li/div/button",
+        )
         button.click()
 
         time.sleep(3)
@@ -118,7 +129,7 @@ class PepperScrapper:
 
     def scrape_additional_data(self):
         additional_info = []
-        for link in self.data['link']:
+        for link in self.data["link"]:
             time.sleep(0.5)
             self.web_driver.get(link)
             info = self.scrape_single_link(link)
@@ -131,7 +142,9 @@ class PepperScrapper:
         soup = BS(response.text, "html.parser")
 
         try:
-            title = soup.find("span", class_="text--b size--all-xl size--fromW3-xxl").get_text()
+            title = soup.find(
+                "span", class_="text--b size--all-xl size--fromW3-xxl"
+            ).get_text()
         except AttributeError:
             title = "title not available"
         category = 0
@@ -144,15 +157,15 @@ class PepperScrapper:
         place_of_bargain_price = 0
 
         info = {
-            'title': title,
-            'category': category,
-            'description': description,
-            'hottnes': hottnes,
-            'number_of_comments': number_of_comments,
-            'price_after_discount': price_after_discount,
-            'price_before_discount': price_before_discount,
-            'percentage_change_in_price': percentage_change_in_price,
-            'place_of_bargain_price': place_of_bargain_price
+            "title": title,
+            "category": category,
+            "description": description,
+            "hottnes": hottnes,
+            "number_of_comments": number_of_comments,
+            "price_after_discount": price_after_discount,
+            "price_before_discount": price_before_discount,
+            "percentage_change_in_price": percentage_change_in_price,
+            "place_of_bargain_price": place_of_bargain_price,
         }
         return info
 
@@ -167,9 +180,9 @@ if __name__ == "__main__":
     scrapper.scan_current_page_for_content()
     scrapper.scan_next_pages(5)
     scrapper.scrapped_data.reset_index(drop=True, inplace=True)
-    scrapper.scrapped_data.to_csv('pepper_links.csv')
-    links_file = 'pepper_links.csv'
-    output_file = 'pepper_data.csv'
+    scrapper.scrapped_data.to_csv("pepper_links.csv")
+    links_file = "pepper_links.csv"
+    output_file = "pepper_data.csv"
     pepper_scrapper = PepperScrapper(links_file, driver)
     pepper_scrapper.scrape_additional_data()
     pepper_scrapper.save_data(output_file)
