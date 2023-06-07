@@ -35,7 +35,7 @@ Run server:
 
 ### Running selenium scraper
 To run the Selenium scraper, navigate to the pepper_scraper directory and run the following command:  
-```poetry run python pepper_scraper.py```
+```poetry run python pepper_recognition.py```
 
 ### Running Scrapy spiders:
 To run the Scrapy spider, navigate to the pepper_scraper directory and run url scraper using the following command:  
