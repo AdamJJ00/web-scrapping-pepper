@@ -35,9 +35,12 @@ Run server:
 
 ### Running selenium scraper
 To run the Selenium scraper, navigate to the pepper_scraper directory and run the following command:  
-```poetry run python pepper_recognition.py```
+```poetry run python pepper_scraper.py```
 
 ### Running Scrapy spiders:
+Get environmental variables from `.env` file into environment:  
+```set -a && source .env```  
+
 To run the Scrapy spider, navigate to the pepper_scraper directory and run url scraper using the following command:  
 ```poetry run python -m scrapy crawl pepper_url_spider -o url_scrapy.csv```  
 
