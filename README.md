@@ -42,6 +42,8 @@ Get environmental variables from `.env` file into environment.
 Your .env file (that should be present in main directory) should contain variables:
 - PEPPER_LOGIN = "your_login"
 - PEPPER_PASSWORD = "your_password"
+
+
 These will be used for scrapy splash. To source your environment variables, run:
 ```set -a && source .env```  
 
